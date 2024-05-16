@@ -1,40 +1,66 @@
-name: Build VSIX
+name: Run test and build
+description: Test and build action, reused among workflows
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+runs:
+  using: "composite"
+  # Steps represent a sequence of tasks that will be executed as part of the job
+  steps:
+    - name: Install Deps Ubuntu
+      if: ${{ runner.os == 'Linux' }}
+      run: sudo apt-get update -y && sudo apt-get -y install libkrb5-dev libsecret-1-dev net-tools libstdc++6 gnome-keyring
+      shell: bash
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
+    # Default Python (3.12) doesn't have support for distutils because of
+    # which the dep install fails constantly on macos
+    # https://github.com/nodejs/node-gyp/issues/2869
+    - uses: actions/setup-python@v4
       with:
-        node-version: '16'
+        python-version: '3.11'
+
+    - name: Run node-gyp bug workaround script
+      run: |
+        curl -sSfLO https://raw.githubusercontent.com/mongodb-js/compass/42e6142ae08be6fec944b80ff6289e6bcd11badf/.evergreen/node-gyp-bug-workaround.sh && bash node-gyp-bug-workaround.sh
+      shell: bash
+
+    - name: Set SEGMENT_KEY
+      env:
+        SEGMENT_KEY: 123456
+      run: |
+        echo "SEGMENT_KEY=${SEGMENT_KEY}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Validate SEGMENT_KEY
+      run: |
+        if [ -z "${SEGMENT_KEY}" ]; then
+          echo "SEGMENT_KEY is not set or is empty"
+          exit 1
+        fi
+      shell: bash
+
+    - name: Install npm
+      run: npm install -g npm@8.19.4
+      shell: bash
 
     - name: Install Dependencies
-      run: npm install
+      shell: bash
+      run: |
+        npm ci --omit=optional
 
-    - name: Install vsce
-      run: npm install -g vsce
-      
+    - name: Run Checks
+      run: npm run check
+      # the glob here just fails
+      if: ${{ runner.os != 'Windows' }}
+      shell: bash
+
+    - name: Run Tests
+      run: |
+        npm run test
+      shell: bash
+
     - name: Build .vsix
-      run: vsce package
-
-    - name: Upload .vsix as Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: VSIX-file
-        path: '*.vsix'
-
-
+      env:
+        NODE_OPTIONS: "--require ./scripts/no-npm-list-fail.js"
+      # NOTE: --githubBranch is "The GitHub branch used to infer relative links in README.md."
+      run: |
+        npx vsce package --githubBranch main
+      shell: bash
