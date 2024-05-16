@@ -233,6 +233,57 @@ export default class ConnectionController {
     return this.addNewConnectionStringAndConnect(connectionString);
   }
 
+  async connectWithURIFromArgs(uri: string): Promise<boolean> {
+    let connectionString: string | undefined = uri;
+
+    log.info('connectWithURIFromArgs command called');
+
+    const cancellationToken = new vscode.CancellationTokenSource();
+    this._connectionStringInputCancellationToken = cancellationToken;
+
+    try {
+      // 验证 URI 是否以 "mongodb://" 或 "mongodb+srv://" 开头
+      if (
+        !uri.startsWith('mongodb://') &&
+        !uri.startsWith('mongodb+srv://')
+      ) {
+        log.error('MongoDB connection strings begin with "mongodb://" or "mongodb+srv://"');
+        await vscode.window.showInformationMessage('MongoDB connection strings begin with "mongodb://" or "mongodb+srv://"');
+        return false;
+      }
+
+      if (connectionString.includes('?')) {
+        connectionString = connectionString + '&directConnection=true';
+      } else {
+        connectionString = connectionString + '?directConnection=true';
+      }
+
+
+      try {
+        // 验证 URI 是否为有效的连接字符串
+        // eslint-disable-next-line no-new
+        new ConnectionString(uri);
+      } catch (error) {
+        log.error(formatError(error).message);
+        await vscode.window.showErrorMessage(formatError(error).message);
+        return false;
+      }
+    } catch (e) {
+      return false;
+    } finally {
+      if (this._connectionStringInputCancellationToken === cancellationToken) {
+        this._connectionStringInputCancellationToken.dispose();
+        this._connectionStringInputCancellationToken = null;
+      }
+    }
+
+    if (!connectionString) {
+      return false;
+    }
+
+    return this.addNewConnectionStringAndConnect(connectionString);
+  }
+
   // Resolves the new connection id when the connection is successfully added.
   // Resolves false when it is added and not connected.
   // The connection can fail to connect but be successfully added.

@@ -164,6 +164,8 @@ module.exports = (env, argv) => {
         buffer: require.resolve('buffer'),
         crypto: require.resolve('crypto-browserify'),
         path: require.resolve('path-browserify'),
+        url: false,
+        util: false,
         mongodb: false,
       },
     },

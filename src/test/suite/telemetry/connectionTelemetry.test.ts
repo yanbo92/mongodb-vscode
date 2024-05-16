@@ -40,7 +40,11 @@ suite('ConnectionTelemetry Controller Test Suite', function () {
         'getConnectionString' | 'instance'
       > as unknown as DataService;
 
-      sandbox.stub(getCloudInfoModule, 'getCloudInfo').resolves({});
+      sandbox.stub(getCloudInfoModule, 'getCloudInfo').resolves({
+        isAws: false,
+        isGcp: false,
+        isAzure: false,
+      });
     });
 
     after(() => {

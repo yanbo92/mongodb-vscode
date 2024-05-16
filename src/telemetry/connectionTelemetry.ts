@@ -65,7 +65,7 @@ async function getCloudInfoFromDataService(
     isAws?: boolean;
     isAzure?: boolean;
     isGcp?: boolean;
-  } = await getCloudInfo(hostname);
+  } = hostname ? await getCloudInfo(hostname) : {};
 
   if (cloudInfo.isAws) {
     return {

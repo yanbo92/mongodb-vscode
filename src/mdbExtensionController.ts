@@ -167,6 +167,9 @@ export default class MDBExtensionController implements vscode.Disposable {
     this.registerCommand(EXTENSION_COMMANDS.MDB_CONNECT_WITH_URI, () =>
       this._connectionController.connectWithURI()
     );
+    this.registerCommand(EXTENSION_COMMANDS.MDB_CONNECT_WITH_URI_FROM_ARGS, (uri: string) =>
+      this._connectionController.connectWithURIFromArgs(uri)
+    );
     this.registerCommand(EXTENSION_COMMANDS.MDB_DISCONNECT, () =>
       this._connectionController.disconnect()
     );
