@@ -1,0 +1,40 @@
+name: Build VSIX
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Install vsce
+      run: npm install -g vsce
+      
+    - name: Build .vsix
+      run: vsce package
+
+    - name: Upload .vsix as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: VSIX-file
+        path: '*.vsix'
+
+
