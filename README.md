@@ -1,3 +1,4 @@
+# This repo add a command accepting connnection string from args making it possbible to called by other extension.
 # MongoDB for VS Code
 
 [![Build Status](https://github.com/mongodb-js/vscode/actions/workflows/test-and-build.yaml/badge.svg?branchName=main)](https://github.com/mongodb-js/vscode/actions/workflows/test-and-build.yaml)
