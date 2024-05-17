@@ -236,7 +236,7 @@ export default class ConnectionController {
   async connectWithURIFromArgs(uri: string): Promise<boolean> {
     let connectionString: string | undefined = uri;
 
-    log.info('connectWithURIFromArgs command called');
+    log.info('connectWithURIFromArgs command called with uri: ' + uri);
 
     const cancellationToken = new vscode.CancellationTokenSource();
     this._connectionStringInputCancellationToken = cancellationToken;
@@ -265,7 +265,6 @@ export default class ConnectionController {
         new ConnectionString(uri);
       } catch (error) {
         log.error(formatError(error).message);
-        await vscode.window.showErrorMessage(formatError(error).message);
         return false;
       }
     } catch (e) {
@@ -715,6 +714,18 @@ export default class ConnectionController {
     await this.removeSavedConnection(connectionId);
 
     void vscode.window.showInformationMessage('MongoDB connection removed.');
+
+    return true;
+  }
+
+  async removeAllMongoDBConnection(): Promise<boolean> {
+    const connections = Object.values(this._connections); // Convert object to array
+
+    for (const c of connections) {
+      await this.removeSavedConnection(c.id);
+    }
+
+    void vscode.window.showInformationMessage('All MongoDB connection removed.');
 
     return true;
   }
